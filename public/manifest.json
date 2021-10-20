@@ -1,0 +1,23 @@
+{
+    "manifest_version": 3,
+
+    "name": "obsidian-livesync-webclip",
+    "description": "Webclipper for Obsidian LiveSync",
+    "version": "0.1",
+
+    "action": {
+        "default_icon": "icon.png",
+        "default_popup": "popup.html"
+    },
+
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["js/vendor.js", "js/content_script.js"]
+        }
+    ],
+
+    "permissions": ["storage", "pageCapture"],
+
+    "host_permissions": ["<all_urls>"]
+}
