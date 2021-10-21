@@ -4,6 +4,8 @@ interface Setting {
     remote: string;
     filenameTemplate: string;
     attachmentFilenameTemplate: string;
+    hideRemoteSetting: boolean;
+    saveMHTML:boolean;
 }
 interface WebClipRequestMessage {
     setting: Setting;
@@ -65,7 +67,7 @@ type EntryBody = DBEntry | NewEntry | PlainEntry;
 type EntryDoc = EntryBody | LoadedEntry | EntryLeaf;
 type SavingEntry = DBEntry & {
     datatype: "plain" | "newnote";
-  };
+};
 type diff_result_leaf = {
     rev: string;
     data: string;

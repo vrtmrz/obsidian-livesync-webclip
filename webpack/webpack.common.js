@@ -1,7 +1,9 @@
 const webpack = require("webpack");
+const TerserPlugin = require("terser-webpack-plugin");
 const path = require("path");
 const CopyPlugin = require("copy-webpack-plugin");
 const srcDir = path.join(__dirname, "..", "src");
+const { CleanWebpackPlugin } = require("clean-webpack-plugin"); // require
 
 module.exports = {
     entry: {
@@ -15,6 +17,20 @@ module.exports = {
         filename: "[name].js",
     },
     optimization: {
+        mergeDuplicateChunks: true,
+        minimize: true,
+        minimizer: [
+            new TerserPlugin({
+                terserOptions: {
+                    format: {
+                        ascii_only: true,
+                    },
+                    compress: false,
+                    mangle: true, // Note `mangle.properties` is `false` by default.
+                    module: false,
+                },
+            }),
+        ],
         splitChunks: {
             name: "vendor",
             chunks(chunk) {
@@ -35,6 +51,11 @@ module.exports = {
         extensions: [".ts", ".tsx", ".js"],
     },
     plugins: [
+        new CleanWebpackPlugin({
+            cleanOnceBeforeBuildPatterns: [
+                "dist/**", // cleanOnceBeforeBuildPatterns キーの中に配列指定。また、ディレクトリパスの指定ではなく、 glob での指定
+            ],
+        }),
         new CopyPlugin({
             patterns: [{ from: ".", to: "../", context: "public" }],
             options: {},

@@ -2,5 +2,5 @@ const { merge } = require('webpack-merge');
 const common = require('./webpack.common.js');
 
 module.exports = merge(common, {
-    mode: 'development', // i wonder why in production mode, chrome couldn't read vendor.js
+    mode: 'production'
 });

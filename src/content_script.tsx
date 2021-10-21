@@ -1,7 +1,9 @@
 /// <reference path="LocalPouchDBForWebClip.ts"/>
+
 import TurndownService from "turndown";
 import { LocalPouchDBForWebClip } from "./LocalPouchDBForWebClip";
 const turndownPluginGfm = require("turndown-plugin-gfm");
+var quotedPrintable = require("quoted-printable");
 
 function cleanAttribute(attribute: string) {
     return attribute ? attribute.replace(/(\n+\s*)+/g, "\n") : "";
@@ -59,8 +61,10 @@ function parseMHTML(req: WebClipRequestMessage, date: string): { [key: string]: 
     const found = pagedata.match(capturingRegex);
     let pageItems: { [key: string]: ReadEntry } = {};
     // if boundary is not captured, save only markdown
+
     if (found && found.groups && found.groups.boundary) {
         let boundary = found.groups.boundary as string;
+        if (boundary != "") boundary = "--" + boundary;
         let entries = pagedata.split(boundary);
         entries.shift();
         entries.shift();
@@ -74,12 +78,15 @@ function parseMHTML(req: WebClipRequestMessage, date: string): { [key: string]: 
                 content[key] = value;
             }
             if (!content["Content-Location"]) continue;
+            // not treat about base64 and quoted-printable.
+            if (content["Content-Transfer-Encoding"] != "base64" && content["Content-Transfer-Encoding"] != "quoted-printable") continue;
+            if (content["Content-Transfer-Encoding"] == "quoted-printable") {
+                let text = quotedPrintable.decode(body);
+                let utf8str = String.fromCharCode.apply(null, new TextEncoder().encode(text));
+                body = window.btoa(utf8str);
+                content["Content-Transfer-Encoding"] = "base64";
+            }
             content["body"] = body;
-
-            let orgFilenameWithExt = content["Content-Location"].split("/").slice(-1)[0];
-            let filenameTemp = orgFilenameWithExt.split(".");
-            let ext = filenameTemp.pop() || "";
-            let filename = filenameTemp.join(".");
 
             let attachmentFilename = createFilename(attachmentfile_template, content["Content-Location"], replaceFilenameStrings(title), date);
             content.saveAs = attachmentFilename;
@@ -95,9 +102,15 @@ function parseMHTML(req: WebClipRequestMessage, date: string): { [key: string]: 
 
 // yes, it is not right collectly in some case. but nothing worried for.
 // Obsidian-livesync's [size] is the complimental information.
-function estimateFileSize(s: string) {
-    let x = s.replace(/=|\r|\n/g, "").length;
-    return Math.ceil(x * 3) / 4;
+function estimateFileSize(s: string, contentType: string) {
+    if (contentType == "base64") {
+        let x = s.replace(/=|\r|\n/g, "").length;
+        return Math.ceil(x * 3) / 4;
+    }
+    if (contentType == "string") {
+        return encodeURIComponent(s).replace(/%../g, "x").length;
+    }
+    return 1;
 }
 
 chrome.runtime.onMessage.addListener(function (req: WebClipRequestMessage, sender, sendResponse) {
@@ -113,11 +126,10 @@ chrome.runtime.onMessage.addListener(function (req: WebClipRequestMessage, sende
                 // const pagedata: string = msg.pagedata;
                 const title: string = req.title;
 
-                // fetch boundary
-
+                // fetch boundary and retrieve data.
                 const pageItems = parseMHTML(req, dispDate);
 
-                // retrive document.
+                // retrieve document.
                 let doc = document.body.outerHTML;
                 let turndownService = new TurndownService();
 
@@ -247,14 +259,15 @@ timestamp: ${date.toLocaleString()}
                 let d = new LocalPouchDBForWebClip("webclip");
                 await d.initializeDatabase();
                 for (let attachmentData of toSave) {
+                    let body = attachmentData.body;
                     let attachment: SavingEntry = {
                         type: "notes",
                         datatype: "newnote",
                         _id: attachmentData.saveAs,
                         mtime: datex,
                         ctime: datex,
-                        size: estimateFileSize(attachmentData.body),
-                        data: attachmentData.body,
+                        size: estimateFileSize(body, attachmentData["Content-Transfer-Encoding"]),
+                        data: body,
                     };
                     await d.putDBEntry(attachment);
                 }
@@ -264,11 +277,25 @@ timestamp: ${date.toLocaleString()}
                     _id: pageFilename,
                     mtime: datex,
                     ctime: datex,
-                    size: estimateFileSize(matter + markdown),
+                    size: estimateFileSize(matter + markdown, "string"),
                     data: matter + markdown,
                 };
                 await d.putDBEntry(pageData);
+                if (setting.saveMHTML) {
+                    let pageData: SavingEntry = {
+                        type: "notes",
+                        datatype: "plain",
+                        _id: pageFilename.replace(".md", ".mhtml"),
+                        mtime: datex,
+                        ctime: datex,
+                        size: estimateFileSize(req.pagedata, "string"),
+                        data: req.pagedata,
+                    };
+                    await d.putDBEntry(pageData);
+                }
 
+                // sendResponse("testing");
+                // return;
                 if (await d.openReplication(setting)) {
                     sendResponse("Save OK!");
                 } else {
