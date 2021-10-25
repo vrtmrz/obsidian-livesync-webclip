@@ -115,38 +115,51 @@ const Popup = () => {
     return (
         <>
             <div className="header">Obsidian LiveSync Clip</div>
-            <ul className="panel">
-                <li>
-                    <label>Current URL</label>
-                    <input type="url" value={currentURL} readOnly={true}></input>
-                </li>
-                {hideRemoteSetting ? (
-                    <></>
-                ) : (
-                    <>
+            {(!currentURL) ?
+                (<>
+                    <ul className="panel">
                         <li>
-                            <label>Database Address</label>
-                            <input type="url" value={remote} onChange={(event) => setRemote(event.target.value)}></input>
+                            <label>Current URL</label>
+                            <input type="url" value={currentURL} readOnly={true}></input>
                         </li>
                         <li>
-                            <label>Username </label>
-                            <input type="text" value={username} onChange={(event) => setUsername(event.target.value)}></input>
+                            Couldn't capture this page
+                        </li>
+                    </ul>
+                </>) :
+                (<>
+                    <ul className="panel">
+                        <li>
+                            <label>Current URL</label>
+                            <input type="url" value={currentURL} readOnly={true}></input>
+                        </li>
+                        {hideRemoteSetting ? (
+                            <></>
+                        ) : (
+                            <>
+                                <li>
+                                    <label>Database Address</label>
+                                    <input type="url" value={remote} onChange={(event) => setRemote(event.target.value)}></input>
+                                </li>
+                                <li>
+                                    <label>Username </label>
+                                    <input type="text" value={username} onChange={(event) => setUsername(event.target.value)}></input>
+                                </li>
+                                <li>
+                                    <label>Password</label>
+                                    <input type="password" value={password} onChange={(event) => setPassword(event.target.value)}></input>
+                                </li>
+                            </>
+                        )}
+                        <li>
+                            <label>Clip to </label>
+                            <input type="text" value={filenameTemplate} onChange={(event) => setFilenameTemplate(event.target.value)}></input>
                         </li>
                         <li>
-                            <label>Password</label>
-                            <input type="password" value={password} onChange={(event) => setPassword(event.target.value)}></input>
+                            <label>Attachments to </label>
+                            <input type="text" value={attachmentFilenameTemplate} onChange={(event) => setAttachmentFilenameTemplate(event.target.value)}></input>
                         </li>
-                    </>
-                )}
-                <li>
-                    <label>Clip to </label>
-                    <input type="text" value={filenameTemplate} onChange={(event) => setFilenameTemplate(event.target.value)}></input>
-                </li>
-                <li>
-                    <label>Attachments to </label>
-                    <input type="text" value={attachmentFilenameTemplate} onChange={(event) => setAttachmentFilenameTemplate(event.target.value)}></input>
-                </li>
-                {/*<li>
+                        {/*<li>
                     <span>
                         <label>
                         <input type="checkbox" checked={saveMHTML} onChange={(event) => setSaveMHTML(event.target.checked)}></input>
@@ -154,30 +167,31 @@ const Popup = () => {
                         </label>
                     </span>
                 </li>*/}
-            </ul>
-            {status == "" ? (
-                <div className="controls">
-                    <label>
-                        <input type="checkbox" checked={hideRemoteSetting} onChange={(event) => setHideRemoteSetting(event.target.checked)}></input>
-                        <span>Hide Remote Settings:</span>
-                    </label>
-
-                    <div className="buttons">
-                        <button onClick={clipTest}>Clip This Page</button> <button onClick={resetFilenameTemplate}>Reset Filename Template</button>
-                    </div>
-                </div>
-            ) : (
-                <>
-                    <div className="controls message">{status}</div>
-                    {!done ? (
-                        <></>
-                    ) : (
+                    </ul>
+                    {status == "" ? (
                         <div className="controls">
-                            <button onClick={closeWindow}>Close</button>
+                            <label>
+                                <input type="checkbox" checked={hideRemoteSetting} onChange={(event) => setHideRemoteSetting(event.target.checked)}></input>
+                                <span>Hide Remote Settings:</span>
+                            </label>
+
+                            <div className="buttons">
+                                <button onClick={clipTest}>Clip This Page</button> <button onClick={resetFilenameTemplate}>Reset Filename Template</button>
+                            </div>
                         </div>
+                    ) : (
+                        <>
+                            <div className="controls message">{status}</div>
+                            {!done ? (
+                                <></>
+                            ) : (
+                                <div className="controls">
+                                    <button onClick={closeWindow}>Close</button>
+                                </div>
+                            )}
+                        </>
                     )}
-                </>
-            )}
+                </>)}
         </>
     );
 };
