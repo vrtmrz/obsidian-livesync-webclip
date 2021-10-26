@@ -5,7 +5,9 @@ interface Setting {
     filenameTemplate: string;
     attachmentFilenameTemplate: string;
     hideRemoteSetting: boolean;
-    saveMHTML:boolean;
+    saveMHTML: boolean;
+    stripImages: boolean;
+    leaveImages: boolean;
 }
 interface WebClipRequestMessage {
     setting: Setting;

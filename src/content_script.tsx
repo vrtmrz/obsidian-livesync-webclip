@@ -38,7 +38,10 @@ interface ReadEntry {
 
 function createFilename(template: string, url: string, title: string, date: string, encode = false) {
     let realizedFilename = template;
-    let orgPageFilenameWithExt = url.split("/").slice(-1)[0];
+    let xurl = url;
+    xurl = xurl.replace(/\?.*$/g, "");
+    xurl = xurl.replace(/\/\./g, "/_");
+    let orgPageFilenameWithExt = xurl.split("/").slice(-1)[0];
     let filenameTemp = orgPageFilenameWithExt.split(".");
     let ext = filenameTemp.pop() || "";
     let filename = filenameTemp.join(".");
@@ -170,25 +173,44 @@ chrome.runtime.onMessage.addListener(function (req: WebClipRequestMessage, sende
                         return "[" + content + "](" + newurl + title + ")";
                     },
                 });
-                // override rules for replace image with captured one.
-                turndownService.addRule("image", {
-                    filter: "img",
-                    replacement: function (content, node: any) {
-                        let alt = cleanAttribute(node.getAttribute("alt"));
-                        let src = node.getAttribute("src") || "";
-                        let baseUrl = window.document.baseURI;
-                        let url = new URL(src, baseUrl);
-                        let newurl = url.toString();
-                        if (typeof pageItems[newurl] != "undefined") {
-                            let img = pageItems[newurl];
-                            newurl = img.linkTo;
-                            toSave.push(img);
-                        }
-                        let title = cleanAttribute(node.getAttribute("title"));
-                        let titlePart = title ? ' "' + title + '"' : "";
-                        return src ? "![" + alt + "]" + "(" + newurl + titlePart + ")" : "";
-                    },
-                });
+                if (setting.stripImages) {
+                    // no.
+                    turndownService.addRule("image", {
+                        filter: "img",
+                        replacement: function (content, node: any) {
+                            let alt = cleanAttribute(node.getAttribute("alt"));
+                            let src = node.getAttribute("src") || "";
+                            let baseUrl = window.document.baseURI;
+                            let url = new URL(src, baseUrl);
+                            let newurl = url.toString();
+                            let title = cleanAttribute(node.getAttribute("title"));
+                            let titlePart = title ? ' "' + title + '"' : "";
+                            return src ? "<!-- image stipped:" + alt + "(" + newurl + titlePart + ") -->" : "";
+                        },
+                    });
+                } else {
+                    if (!setting.leaveImages) {
+                        // override rules for replace image with captured one.
+                        turndownService.addRule("image", {
+                            filter: "img",
+                            replacement: function (content, node: any) {
+                                let alt = cleanAttribute(node.getAttribute("alt"));
+                                let src = node.getAttribute("src") || "";
+                                let baseUrl = window.document.baseURI;
+                                let url = new URL(src, baseUrl);
+                                let newurl = url.toString();
+                                if (typeof pageItems[newurl] != "undefined") {
+                                    let img = pageItems[newurl];
+                                    newurl = img.linkTo;
+                                    toSave.push(img);
+                                }
+                                let title = cleanAttribute(node.getAttribute("title"));
+                                let titlePart = title ? ' "' + title + '"' : "";
+                                return src ? "![" + alt + "]" + "(" + newurl + titlePart + ")" : "";
+                            },
+                        });
+                    }
+                }
 
                 let references: string[] = [];
                 turndownService.addRule("referenceLink", {

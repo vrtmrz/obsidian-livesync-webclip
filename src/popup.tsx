@@ -12,10 +12,12 @@ const defaultSetting: Setting = {
     attachmentFilenameTemplate: "/webclip/attachments/{title}_{date}/{filename}.{date}.{ext}",
     hideRemoteSetting: false,
     saveMHTML: false,
+    stripImages: false,
+    leaveImages: false,
 };
 
 const Popup = () => {
-    const [currentURL, setCurrentURL] = useState<string>();
+    const [currentURL, setCurrentURL] = useState<string>("");
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [remote, setRemote] = useState("");
@@ -25,6 +27,8 @@ const Popup = () => {
     const [status, setStatus] = useState("");
     const [done, setDone] = useState(false);
     const [saveMHTML, setSaveMHTML] = useState(false);
+    const [stripImages, setStripImages] = useState(false);
+    const [leaveImages, setLeaveImages] = useState(false);
     const clipTest = () => {
         chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
             const tab = tabs[0];
@@ -43,6 +47,8 @@ const Popup = () => {
                             attachmentFilenameTemplate,
                             hideRemoteSetting,
                             saveMHTML,
+                            stripImages,
+                            leaveImages,
                         };
                         let message: WebClipRequestMessage = {
                             setting: setting,
@@ -80,6 +86,8 @@ const Popup = () => {
             attachmentFilenameTemplate,
             hideRemoteSetting,
             saveMHTML,
+            stripImages,
+            leaveImages,
         };
         chrome.storage.sync.set(setting, function () {
             // Update status to let user know options were saved.
@@ -102,6 +110,8 @@ const Popup = () => {
             setAttachmentFilenameTemplate(items.attachmentFilenameTemplate);
             setHideRemoteSetting(items.hideRemoteSetting);
             setSaveMHTML(items.saveMHTML);
+            setStripImages(items.stripImages);
+            setLeaveImages(items.leaveImages);
         });
     }
     document.addEventListener("DOMContentLoaded", restore_options);
@@ -115,19 +125,18 @@ const Popup = () => {
     return (
         <>
             <div className="header">Obsidian LiveSync Clip</div>
-            {(!currentURL) ?
-                (<>
+            {!currentURL ? (
+                <>
                     <ul className="panel">
                         <li>
                             <label>Current URL</label>
                             <input type="url" value={currentURL} readOnly={true}></input>
                         </li>
-                        <li>
-                            Couldn't capture this page
-                        </li>
+                        <li>Couldn't capture this page</li>
                     </ul>
-                </>) :
-                (<>
+                </>
+            ) : (
+                <>
                     <ul className="panel">
                         <li>
                             <label>Current URL</label>
@@ -159,14 +168,51 @@ const Popup = () => {
                             <label>Attachments to </label>
                             <input type="text" value={attachmentFilenameTemplate} onChange={(event) => setAttachmentFilenameTemplate(event.target.value)}></input>
                         </li>
-                        {/*<li>
-                    <span>
-                        <label>
-                        <input type="checkbox" checked={saveMHTML} onChange={(event) => setSaveMHTML(event.target.checked)}></input>
-                        <span>Save MHTML too.</span>
-                        </label>
-                    </span>
-                </li>*/}
+                        <li>
+                            <label>Save MHTML too</label>
+                            <span>
+                                <label>
+                                    <input type="checkbox" checked={saveMHTML} onChange={(event) => setSaveMHTML(event.target.checked)}></input>
+                                    <span></span>
+                                </label>
+                            </span>
+                        </li>
+                        <li>
+                            <label>Strip images</label>
+                            <span>
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        checked={stripImages}
+                                        onChange={(event) => {
+                                            setStripImages(event.target.checked);
+                                            if (event.target.checked) {
+                                                setLeaveImages(!event.target.checked);
+                                            }
+                                        }}
+                                    ></input>
+                                    <span></span>
+                                </label>
+                            </span>
+                        </li>
+                        <li>
+                            <label>leave images as URL</label>
+                            <span>
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        checked={leaveImages}
+                                        onChange={(event) => {
+                                            setLeaveImages(event.target.checked);
+                                            if (event.target.checked) {
+                                                setStripImages(!event.target.checked);
+                                            }
+                                        }}
+                                    ></input>
+                                    <span></span>
+                                </label>
+                            </span>
+                        </li>
                     </ul>
                     {status == "" ? (
                         <div className="controls">
@@ -191,7 +237,8 @@ const Popup = () => {
                             )}
                         </>
                     )}
-                </>)}
+                </>
+            )}
         </>
     );
 };
