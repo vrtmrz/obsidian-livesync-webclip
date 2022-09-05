@@ -4,6 +4,8 @@
 // when to release, I'll make it tidy up.
 import xxhash from "xxhash-wasm";
 import PouchDB from "pouchdb-browser";
+import * as transform from 'transform-pouch';
+PouchDB.plugin(transform);
 const MAX_DOC_SIZE = 1000; // for .md file, but if delimiters exists. use that before.
 const MAX_DOC_SIZE_BIN = 102400; // 100kb
 
@@ -67,7 +69,7 @@ export class LocalPouchDBForWebClip {
     close() {
         try {
             this.localDatabase.destroy();
-        } catch (e) {}
+        } catch (e) { }
 
         this.localDatabase.close();
     }
@@ -87,7 +89,7 @@ export class LocalPouchDBForWebClip {
         });
         try {
             await this.localDatabase.destroy();
-        } catch (s) {}
+        } catch (s) { }
         this.localDatabase = new PouchDB<EntryDoc>(this.dbname + "-webclip", {
             auto_compaction: true,
             revs_limit: 100,
@@ -112,10 +114,6 @@ export class LocalPouchDBForWebClip {
         let pieceSize = MAX_DOC_SIZE_BIN;
         let plainSplit = false;
         let cacheUsed = 0;
-        if (note._id.endsWith(".md")) {
-            pieceSize = MAX_DOC_SIZE;
-            plainSplit = true;
-        }
         do {
             // To keep low bandwith and database size,
             // Dedup pieces on database.

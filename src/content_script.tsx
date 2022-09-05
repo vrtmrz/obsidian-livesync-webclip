@@ -56,9 +56,16 @@ function createFilename(template: string, url: string, title: string, date: stri
     if (realizedFilename.endsWith(".")) realizedFilename = realizedFilename.substring(0, realizedFilename.length - 1);
     return realizedFilename;
 }
+function stripSlash(strPath: string) {
+    if (strPath.startsWith("/")) {
+        if (strPath.startsWith("/_")) return strPath;
+        return strPath.substring(1);
+    }
+    return strPath;
+}
 function parseMHTML(req: WebClipRequestMessage, date: string): { [key: string]: ReadEntry } {
     const pagedata = req.pagedata;
-    const attachmentfile_template = req.setting.attachmentFilenameTemplate;
+    const attachmentfile_template = stripSlash(req.setting.attachmentFilenameTemplate);
     const capturingRegex = /\n\s*boundary="(?<boundary>.*?)"\s\n/;
     const title: string = req.title;
     const found = pagedata.match(capturingRegex);
@@ -123,7 +130,7 @@ chrome.runtime.onMessage.addListener(function (req: WebClipRequestMessage, sende
                 const setting: Setting = req.setting;
                 let date = new Date();
                 const dispDate = getNowDateString(date);
-                const filename_template = setting.filenameTemplate;
+                const filename_template = stripSlash(setting.filenameTemplate);
 
                 const url: string = req.url;
                 // const pagedata: string = msg.pagedata;
