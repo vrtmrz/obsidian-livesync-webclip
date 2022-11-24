@@ -96,7 +96,7 @@ function parseMHTML(req: WebClipRequestMessage, date: string): { [key: string]: 
                 body = window.btoa(utf8str);
                 content["Content-Transfer-Encoding"] = "base64";
             }
-            content["body"] = body;
+            content["body"] = body.replace(/[^a-zA-Z0-9/+=]/g,"");
 
             let attachmentFilename = createFilename(attachmentfile_template, content["Content-Location"], replaceFilenameStrings(title), date);
             content.saveAs = attachmentFilename;
@@ -290,7 +290,7 @@ timestamp: ${date.toLocaleString()}
                 for (let attachmentData of toSave) {
                     let body = attachmentData.body;
                     let attachment: SavingEntry = {
-                        type: "notes",
+                        type: "newnote",
                         datatype: "newnote",
                         _id: attachmentData.saveAs,
                         mtime: datex,
@@ -301,7 +301,7 @@ timestamp: ${date.toLocaleString()}
                     await d.putDBEntry(attachment);
                 }
                 let pageData: SavingEntry = {
-                    type: "notes",
+                    type: "plain",
                     datatype: "plain",
                     _id: pageFilename,
                     mtime: datex,
@@ -312,8 +312,8 @@ timestamp: ${date.toLocaleString()}
                 await d.putDBEntry(pageData);
                 if (setting.saveMHTML) {
                     let pageData: SavingEntry = {
-                        type: "notes",
-                        datatype: "plain",
+                        type: "newnote",
+                        datatype: "newnote",
                         _id: pageFilename.replace(".md", ".mhtml"),
                         mtime: datex,
                         ctime: datex,

@@ -235,7 +235,7 @@ export class LocalPouchDBForWebClip {
             ctime: note.ctime,
             mtime: note.mtime,
             size: note.size,
-            type: plainSplit ? "plain" : "newnote",
+            type: note.type != "notes" ? note.type : "newnote",
         };
         // Here for upsert logic,
         try {

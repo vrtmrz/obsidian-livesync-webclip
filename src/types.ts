@@ -26,7 +26,7 @@ interface DBEntry {
     size: number;
     _deleted?: boolean;
     _conflicts?: string[];
-    type?: "notes";
+    type?: "plain" | "newnote" | "notes";
 }
 interface NewEntry {
     _id: string;
