@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
-function buffer_to_string(buf: ArrayBuffer) {
-    return String.fromCharCode.apply(null, buf as any);
-}
+import { SavingData, type Setting, type WebClipRequestMessage } from "./types";
+import { DirectFileManipulator } from "./lib/src/DirectFileManipulator";
+
 
 const defaultSetting: Setting = {
     username: "",
@@ -14,6 +14,8 @@ const defaultSetting: Setting = {
     saveMHTML: false,
     stripImages: false,
     leaveImages: false,
+    passphrase: "",
+    remoteDBName: "",
 };
 
 const Popup = () => {
@@ -29,6 +31,8 @@ const Popup = () => {
     const [saveMHTML, setSaveMHTML] = useState(false);
     const [stripImages, setStripImages] = useState(false);
     const [leaveImages, setLeaveImages] = useState(false);
+    const [remoteDBName, setRemoteDBName] = useState("");
+    const [passphrase, setPassphrase] = useState("");
     const clipTest = () => {
         chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
             const tab = tabs[0];
@@ -37,7 +41,7 @@ const Popup = () => {
                 setStatus("Retriving Attachments.");
                 chrome.pageCapture.saveAsMHTML({ tabId: tabid }, (c: Blob) => {
                     c.text().then((t) => {
-                        setStatus("Saving to the local database.");
+                        setStatus("Fetching the page and contents...");
                         // let t = await c.text();
                         let setting: Setting = {
                             username,
@@ -49,6 +53,8 @@ const Popup = () => {
                             saveMHTML,
                             stripImages,
                             leaveImages,
+                            remoteDBName,
+                            passphrase,
                         };
                         let message: WebClipRequestMessage = {
                             setting: setting,
@@ -57,10 +63,30 @@ const Popup = () => {
                             type: "clip",
                             pagedata: t,
                         };
-                        chrome.tabs.sendMessage(tabid, message, (msg) => {
+                        chrome.tabs.sendMessage(tabid, message, async (result: SavingData[] | string) => {
+
                             save_options();
+                            if (typeof (result) === "string") {
+                                setStatus(result);
+                            } else {
+                                const manipurator = new DirectFileManipulator({
+                                    database: setting.remoteDBName,
+                                    username: setting.username,
+                                    password: setting.password,
+                                    url: setting.remote,
+                                    passphrase: setting.passphrase,
+                                    obfuscatePassphrase: setting.passphrase
+                                })
+                                let outMsg = "";
+                                for (const data of result) {
+                                    await manipurator.put(...data);
+                                    outMsg += `OK:${data[0]}\n`
+                                    setStatus(outMsg);
+                                }
+                                outMsg += `Done!\n`;
+                                setStatus(outMsg);
+                            }
                             // alert(msg);
-                            setStatus(msg);
                             setDone(true);
                         });
                         return true;
@@ -88,6 +114,8 @@ const Popup = () => {
             saveMHTML,
             stripImages,
             leaveImages,
+            passphrase,
+            remoteDBName
         };
         chrome.storage.sync.set(setting, function () {
             // Update status to let user know options were saved.
@@ -112,6 +140,8 @@ const Popup = () => {
             setSaveMHTML(items.saveMHTML);
             setStripImages(items.stripImages);
             setLeaveImages(items.leaveImages);
+            setPassphrase(items.passphrase);
+            setRemoteDBName(items.remoteDBName);
         });
     }
     document.addEventListener("DOMContentLoaded", restore_options);
@@ -147,8 +177,12 @@ const Popup = () => {
                         ) : (
                             <>
                                 <li>
-                                    <label>Database Address</label>
+                                    <label>Database URL</label>
                                     <input type="url" value={remote} onChange={(event) => setRemote(event.target.value)}></input>
+                                </li>
+                                <li>
+                                    <label>Database Name</label>
+                                    <input type="url" value={remoteDBName} onChange={(event) => setRemoteDBName(event.target.value)}></input>
                                 </li>
                                 <li>
                                     <label>Username </label>
@@ -157,6 +191,10 @@ const Popup = () => {
                                 <li>
                                     <label>Password</label>
                                     <input type="password" value={password} onChange={(event) => setPassword(event.target.value)}></input>
+                                </li>
+                                <li>
+                                    <label>E2EE Passphrase</label>
+                                    <input type="password" value={passphrase} onChange={(event) => setPassphrase(event.target.value)}></input>
                                 </li>
                             </>
                         )}

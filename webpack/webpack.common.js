@@ -27,7 +27,7 @@ module.exports = {
                     },
                     compress: false,
                     mangle: true, // Note `mangle.properties` is `false` by default.
-                    module: false,
+                    module: true,
                 },
             }),
         ],
@@ -42,13 +42,21 @@ module.exports = {
         rules: [
             {
                 test: /\.tsx?$/,
-                use: "ts-loader",
                 exclude: /node_modules/,
+                use: [
+                    {
+                        loader: 'ts-loader',
+                        options: {
+                            onlyCompileBundledFiles: true
+                        }
+                    }
+                ]
             },
         ],
     },
     resolve: {
         extensions: [".ts", ".tsx", ".js"],
+        fallback: { "crypto": false },
     },
     plugins: [
         new CleanWebpackPlugin({

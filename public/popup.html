@@ -1,157 +1,185 @@
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <title>obsidian-livesync-webclipper</title>
     <script src="js/vendor.js"></script>
     <style>
-            body {
-                font-family: "Helvetica Neue", "Segoe UI", sans-serif;
-            }
-            input {
-                font-family: "Courier New", Courier, monospace;
-            }
-            .panel {
-                margin-top: 8px;
-                margin-left: 16px;
-                margin-right: 16px;
-                margin-bottom: 8px;
-                display: flex;
-                flex-direction: column;
-            }
-            .url {
-                display: inline-block;
-                flex-grow: 0;
-                overflow: hidden;
-                user-select: text;
-            }
-            ul {
-                list-style-type: none;
-                margin-block-start: 0;
-                margin-block-end: 0;
-                margin-inline-start: 0;
-                margin-inline-end: 0;
-                padding-inline-start: 0;
-            }
-            li {
-                display: flex;
-                align-items: baseline;
-                margin-top: 1px;
-            }
-            li > label {
-                min-width: 120px;
-                display: inline-block;
-            }
-            li input {
-                border: none;
-                flex-grow: 1;
-                border-radius: 2px;
-                background-color: #434343;
-                color: #fcfcfc;
-            }
-            .controls {
-                margin-left: 16px;
-                margin-right: 16px;
-                display: flex;
-                flex-direction: column;
-                align-items: stretch;
-                justify-items: baseline;
-                margin-bottom: 8px;
-            }
-            .controls > label {
-                display: flex;
-                justify-content: flex-end;
-                flex-direction: row;
-            }
-            .buttons {
-                display: flex;
-                flex-direction: column;
-            }
-            input[type="checkbox"] {
-                display: none;
-            }
-            input[type="checkbox"] + span {
-                display: flex;
-                justify-content: center;
-                align-items: flex-end;
-            }
-            input[type="checkbox"] + span::after {
-                display: inline-block;
-                content: "";
-                width: 1em;
-                height: 1em;
-                border: 1px solid #fcfcfc;
-                border-radius: 2px;
-                margin-left: 0.5em;
-                transition-duration: 0.2s;
-                transition: all 0.2s;
-            }
-            input[type="checkbox"]:checked + span::after {
-                background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpolyline fill='none' stroke='%23fcfcfc' stroke-width='3' points='2,7.3 7.3,12.7 18,2 '/%3E%3C/svg%3E");
-                background-repeat: no-repeat;
-                background-position: 0 2px;
-            }
-            input[type="checkbox"]:focus + span::after {
-                border: 1px solid #fcfcfc;
-                background-color: #fcfcfc33;
-            }
-            input[type="checkbox"]:hover + span::after {
-                border: 1px solid #fcfcfc;
-                background-color: #fcfcfc99;
-            }
+        body {
+            font-family: "Helvetica Neue", "Segoe UI", sans-serif;
+        }
 
-            button {
-                transition: all;
-                transition-duration: 0.2s;
-                flex-grow: 1;
-                font-size: 1.2em;
-                color: #fcfcfc;
-                background: transparent;
-                border: 1px solid #fcfcfc;
-                padding: 4px;
-                margin-top: 2px;
-                border-radius: 2px;
-                cursor: pointer;
-            }
-            button:active,
-            button:hover {
-                transition: all;
-                transition-duration: 0.2s;
-                background: #fcfcfc;
-                color: #434343;
-                border: 1px solid #fcfcfc;
-            }
-            body {
-                /* background-image: linear-gradient(to top, #09203f 0%, #537895 100%); */
-                /* background-image: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%); */
-                background-image: linear-gradient(to right, #434343 0%, rgb(49, 49, 49) 100%);
-                color: #fffcfc;
-                /* background-color: lightgray;
+        input {
+            font-family: "Courier New", Courier, monospace;
+        }
+
+        .panel {
+            margin-top: 8px;
+            margin-left: 16px;
+            margin-right: 16px;
+            margin-bottom: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .url {
+            display: inline-block;
+            flex-grow: 0;
+            overflow: hidden;
+            user-select: text;
+        }
+
+        ul {
+            list-style-type: none;
+            margin-block-start: 0;
+            margin-block-end: 0;
+            margin-inline-start: 0;
+            margin-inline-end: 0;
+            padding-inline-start: 0;
+        }
+
+        li {
+            display: flex;
+            align-items: baseline;
+            margin-top: 1px;
+        }
+
+        li>label {
+            min-width: 120px;
+            display: inline-block;
+        }
+
+        li input {
+            border: none;
+            flex-grow: 1;
+            border-radius: 2px;
+            background-color: #434343;
+            color: #fcfcfc;
+        }
+
+        .controls {
+            margin-left: 16px;
+            margin-right: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            justify-items: baseline;
+            margin-bottom: 8px;
+        }
+
+        .controls>label {
+            display: flex;
+            justify-content: flex-end;
+            flex-direction: row;
+        }
+
+        .buttons {
+            display: flex;
+            flex-direction: column;
+        }
+
+        input[type="checkbox"] {
+            display: none;
+        }
+
+        input[type="checkbox"]+span {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        input[type="checkbox"]+span::after {
+            display: inline-block;
+            content: "";
+            width: 1em;
+            height: 1em;
+            border: 1px solid #fcfcfc;
+            border-radius: 2px;
+            margin-left: 0.5em;
+            transition-duration: 0.2s;
+            transition: all 0.2s;
+        }
+
+        input[type="checkbox"]:checked+span::after {
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpolyline fill='none' stroke='%23fcfcfc' stroke-width='3' points='2,7.3 7.3,12.7 18,2 '/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 0 2px;
+        }
+
+        input[type="checkbox"]:focus+span::after {
+            border: 1px solid #fcfcfc;
+            background-color: #fcfcfc33;
+        }
+
+        input[type="checkbox"]:hover+span::after {
+            border: 1px solid #fcfcfc;
+            background-color: #fcfcfc99;
+        }
+
+        button {
+            transition: all;
+            transition-duration: 0.2s;
+            flex-grow: 1;
+            font-size: 1.2em;
+            color: #fcfcfc;
+            background: transparent;
+            border: 1px solid #fcfcfc;
+            padding: 4px;
+            margin-top: 2px;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+
+        button:active,
+        button:hover {
+            transition: all;
+            transition-duration: 0.2s;
+            background: #fcfcfc;
+            color: #434343;
+            border: 1px solid #fcfcfc;
+        }
+
+        body {
+            /* background-image: linear-gradient(to top, #09203f 0%, #537895 100%); */
+            /* background-image: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%); */
+            background-image: linear-gradient(to right, #434343 0%, rgb(49, 49, 49) 100%);
+            color: #fffcfc;
+            /* background-color: lightgray;
                             border-radius: 4px; */
-            }
-            input:focus,
-            select:focus,
-            textarea:focus,
-            button:focus {
-                outline: none;
-            }
-            .header {
-                font-size: 1.5em;
-                display: flex;
-                justify-content: center;
-                border-bottom: 1px solid #f3f3f3;
-                padding-bottom: 4px;
-            }
-            .message {
-                font-size: 1.5em;
-                justify-content: center;
-                border-top: 1px solid #f3f3f3;
-                padding-top: 4px;
-      }
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus,
+        button:focus {
+            outline: none;
+        }
+
+        .header {
+            font-size: 1.5em;
+            display: flex;
+            justify-content: center;
+            border-bottom: 1px solid #f3f3f3;
+            padding-bottom: 4px;
+        }
+
+        .message {
+            font-size: 1.5em;
+            justify-content: center;
+            border-top: 1px solid #f3f3f3;
+            padding-top: 4px;
+            white-space: pre-line;
+            max-height: 240px;
+            overflow-y: scroll;
+            word-break: break-all;
+        }
     </style>
-  </head>
-  <body>
+</head>
+
+<body>
     <div id="root"></div>
     <script src="js/popup.js"></script>
-  </body>
+</body>
+
 </html>
